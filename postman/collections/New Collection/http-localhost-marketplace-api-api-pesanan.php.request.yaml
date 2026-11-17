@@ -1,0 +1,15 @@
+$kind: http-request
+name: http://localhost/marketplace-api/api/pesanan.php
+description: ""
+url: http://localhost/marketplace-api/api/pesanan.php
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"produk_id\": 1,\r
+
+    \    \"jumlah\": 2\r
+
+    }\r\n"
+order: 1000
