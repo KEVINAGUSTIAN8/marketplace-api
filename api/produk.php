@@ -36,10 +36,19 @@ function gid():int{
     $i=(int)$r; if($i<=0)sj(false,400,'Parameter "id" wajib > 0'); return $i;
 }
 function tex(mysqli $c,string $t):bool{
-    try{$s=$c->prepare("SHOW TABLES LIKE ?");$s->bind_param('s',$t);$s->execute();
-        $o=$s->get_result()->fetch_row()!==null;$s->close();return $o;}
-    catch(Throwable $e){return false;}
+    try{
+        $s=$c->prepare(
+            "SELECT COUNT(*) FROM information_schema.tables
+             WHERE table_schema=DATABASE() AND table_name=?"
+        );
+        $s->bind_param('s',$t);
+        $s->execute();
+        return (int)$s->get_result()->fetch_row()[0] > 0;
+    }catch(Throwable $e){
+        return false;
+    }
 }
+
 function cols(mysqli $c,string $t):array{
     static $K=[]; if(isset($K[$t]))return $K[$t];
     if(!tex($c,$t))return $K[$t]=[];
@@ -79,7 +88,12 @@ function list_(mysqli $c):void{
     $q=$c->prepare("SELECT `".implode('`,`',$K)."` FROM `".PT."`".$w." ORDER BY `".PK."` DESC LIMIT ? OFFSET ?");
     $all=$ps;$ty2=$ty.'ii';$all[]=$lim;$all[]=$off;
     $q->bind_param($ty2,...$all);$q->execute();
-    $d=[];while($r=$q->get_result()->fetch_assoc())$d[]=$r;$q->close();
+    $q->bind_param($ty2,...$all);$q->execute();
+$res=$q->get_result();
+$d=[];
+while($r=$res->fetch_assoc())$d[]=$r;
+$q->close();
+
     sj(true,200,'OK',[
         'items'=>$d,'meta'=>['page'=>$page,'limit'=>$lim,'total'=>$tot,
         'total_pages'=>(int)ceil($tot/$lim)]]);
